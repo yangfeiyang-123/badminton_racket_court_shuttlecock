@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "badminton-racket-court-shuttlecock"
+version = "0.1.0"
+description = "MuJoCo physics models for badminton court, racket, shuttlecock, contact and grip"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "numpy>=2.0",
+    "mujoco==3.4.0",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+# GPU-parallel physics (badminton_physics_mjx.py)
+mjx = ["mujoco-mjx==3.4.0", "jax==0.7.2", "jaxlib==0.7.2"]
+# visualize_* scripts
+viz = ["matplotlib"]
+# Rebuilding full-body / grip scenes also needs the MuscleMimic package
+# (musclemimic.environments.humanoids.*) from the main repository.
+fullbody = ["musclemimic_models==1.0.5"]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["environment*", "src*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["environment", "tests"]
