@@ -22,7 +22,12 @@ MuJoCo 羽毛球物理建模：球场、球拍（含拍弦床）、羽毛球（�
 | `environment/overall_environment/src/racket_attachment.py` / `soft_weld_schedule.py` | 手–拍刚性附着合同（质量、惯量、握持变换，带 SHA-256 指纹），软焊约束 solref/solimp 课程 |
 | `environment/double_play/src/rally_physics.py` | 一球多拍的对打子步物理（v2 物理默认开启） |
 | `src/grip/` + `configs/racket_handle_params.json` + `configs/right_hand_racket_grip_*` | 右手–拍柄握持：拍柄八角截面几何、接触摩擦/condim 参数、握姿求解与评估 |
-| `configs/racket_attachment/`, `configs/racket_grip/` | 版本化球拍附着与握持配置 |
+| `configs/racket_grip/forehand_clear_grip_v{1,2}_custom.json` | **握拍姿势 preset**：右手 20 个手指关节目标角（rad），绑定一份球拍附着合同的 SHA-256 指纹；v2 为当前默认 |
+| `configs/racket_attachment/forehand_clear_rigid_v{2,3,4}_custom.json` | 球拍相对右手 `thirdmc_r` 的固定位姿（位置、朝向）与球拍质量/惯量合同；v4 与 v2 握拍配套 |
+| `configs/right_hand_racket_grip_reference.json` | 静态握拍参考：IK 优化后的右手 qpos 与球拍位姿（平均 site 误差 12.5 mm） |
+| `configs/right_hand_racket_grip_targets.json`, `environment/holdracket/configs/` | 手部 site ↔ 拍柄目标点对应与权重 |
+| `src/grip/racket_grip_preset.py` | 握拍 preset 读取、校验（指纹必须与附着合同一致）、写出 |
+| `src/grip/racket_pose_editor.py`, `docs/racket_pose_editor.rst` | 交互式握拍编辑器：调球拍朝向/坐标与逐关节手指角度，保存为新版本 preset |
 | `docs/contracts/body_action_modes_and_rigid_racket.md` | 刚性球拍与身体动作模式合同 |
 
 坐标约定：球场 x 沿场长（网在 x=0），y 沿场宽，z 向上；球拍体系 +Y 柄→拍头、+Z 拍面法向；
@@ -65,15 +70,17 @@ pytest
 
 ## 测试覆盖与独立运行限制
 
-- 仅安装本仓库依赖（无 MuscleMimic）：**84 passed, 1 skipped**。覆盖球场几何/XML、球拍设计与拍弦力、
+- 仅安装本仓库依赖（无 MuscleMimic）：**97 passed, 1 skipped**。覆盖球场几何/XML、球拍设计与拍弦力、
   羽毛球气动 v1/v2、拍–球事件碰撞、单人子步物理（含 v2）、MJX 与 NumPy 数值一致性、来球生成、
-  接触图、击球目标、参考球拍。
+  接触图、击球目标、参考球拍、握拍 preset 读写与编辑器几何。
 - `test_double_play_scene.py`、`test_rally_physics.py`、`tests/unit/test_right_hand_racket_grip.py`
   需要重新生成全身/握拍场景，依赖主仓库的 `musclemimic` 包和 `musclemimic_models`；
   未安装时由根目录 `conftest.py` 跳过。在主仓库环境中这 74 项全部通过。
 - 预生成的场景 XML（`overall_incoming_hit_scene.xml`、`double_play_scene.xml`、
   `right_hand_racket_grip_scene.xml`）已包含在内，直接加载无需 MuscleMimic；
-  重新生成这些场景（`build_*_scene.py`）和 `src/grip/render/` 需要 MuscleMimic。
+  重新生成这些场景（`build_*_scene.py`）、`src/grip/render/` 和握拍编辑器的交互预览需要 MuscleMimic。
+- 主仓库中握拍 preset 在 reset 时由 `loco_mujoco` 的 `RacketGripInitialStateHandler` 施加到模型，
+  该训练框架胶水代码未包含在本仓库。
 
 ## License
 
